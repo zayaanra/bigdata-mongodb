@@ -26,13 +26,10 @@ db = client["bigdata"]
 # db.foreclosureData.insert_many(foreclosureData)
 
 # durhamCountyData = pd.read_csv('Restaurants_in_Durham_County_NC.csv', delimiter=';')   # loading csv file
-# durhamCountyData.to_json('Restaurants_in_Durham_County_NC.json')
-# requesting = []
+# durhamCountyData.to_json('Restaurants_in_Durham_County_NC.json', orient='records')
 # with open("Restaurants_in_Durham_County_NC.json", "r") as f:
-#     for jsonObj in f:
-#         myDict = json.loads(jsonObj)
-#         requesting.append(myDict)
-# db.durhamCountyData.insert_many(requesting)
+#     durhamCountyData = json.load(f)
+# db.durhamCountyData.insert_many(durhamCountyData)
 
 # worldCitiesData = pd.read_csv('worldcities.csv', delimiter=';')   # loading csv file
 # worldCitiesData.to_json('worldcities.json')
@@ -170,6 +167,39 @@ db = client["bigdata"]
 # for doc in db.restaurantData.find({"address.coord.1": {"$gt": 42, "$lte": 52}}, {"restaurant_id": 1, "name": 1, "address": 1}):
 #     print(doc)
 
+
+# ------------------------- Q2: Restaurant foreclosures in North Carolina ------------------------- #
+# restaurants = db.durhamCountyData.find({"Rpt_Area_Desc": "Food Service", "Seats": {"$gte": 100}})
+# coords = []
+# for doc in restaurants:
+#     geolocation = doc.get("geolocation")
+#     if geolocation:
+#         x, y = geolocation.split(', ')
+#         coords.append([float(x), float(y)])
+
+# Make sure the polygon is closed (i.e., first and last points are the same)
+# if coords:
+#     coords.append(coords[0])
+
+# Define the polygon query
+# polygon = {
+#     "type": "Polygon",
+#     "coordinates": [coords]  # coordinates need to be inside another list
+# }
+
+# Query the foreclosures collection using the polygon
+# result = db.foreclosureData.find({
+#     "fields.geocode": {
+#         "$geoWithin": {
+#             "$polygon": [coords]
+#         }
+#     }
+# })
+# for doc in result.limit(1):
+#     print(doc)
+
+
+# ------------------------- Q3: Extra Credit ------------------------- #
 
 
 
