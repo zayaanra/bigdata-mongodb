@@ -2,6 +2,10 @@ import pymongo
 import json
 import csv
 import pandas as pd
+import pytz
+import dateutil.parser
+
+from datetime import datetime
 
 client = pymongo.MongoClient("mongodb://localhost:27017/")
 db = client["bigdata"]
@@ -48,11 +52,11 @@ db = client["bigdata"]
 # for doc in db.restaurantData.find():
 #     print(doc)
 
-# # 3. Display: restaurant_id, name, borough and cuisine for all the documents
+# 3. Display: restaurant_id, name, borough and cuisine for all the documents
 # for doc in db.restaurantData.find({}, {"restaurant_id": 1, "name": 1, "borough": 1, "cuisine": 1}):
 #     print(doc)
 
-# # 4. Display: restaurant_id, name, borough and cuisine, but exclude field _id, for all the documents in the collection
+# 4. Display: restaurant_id, name, borough and cuisine, but exclude field _id, for all the documents in the collection
 # for doc in db.restaurantData.find({}, {"restaurant_id": 1, "name": 1, "borough": 1, "cuisine": 1, "_id": 0}):
 #     print(doc)
 
@@ -77,7 +81,6 @@ db = client["bigdata"]
 #     print(doc)
 
 # 10.Find the restaurants that achieved score, more than 80 but less than 100.
-# TODO: Incorrect results
 # for doc in db.restaurantData.find({"grades.score": {"$gt": 80, "$lt": 100}}):
 #     print(doc)
 
@@ -86,15 +89,24 @@ db = client["bigdata"]
 #     print(doc)
 
 # 12.Find the restaurants that do not prepare any cuisine of 'American' and their grade score more than 70 and longitude less than -65.754168.
-# for doc in db.restaurantData.find({"cuisine": {"$ne": "American "}, "grades.score": {"$gt": 70}, "address.coord.0": {"$lt": -65.754168}}):
+# for doc in db.restaurantData.find({
+#     "cuisine": {"$ne": "American "}, 
+#     "grades.score": {"$gt": 70}, 
+#     "address.coord.0": {"$lt": -65.754168}}):
 #     print(doc)
 
 # 13.Find the restaurants which do not prepare any cuisine of 'American' and achieved a score more than 70 and located in the longitude less than -65.754168. (without using $and operator).
-# for doc in db.restaurantData.find({"cuisine": {"$ne": "American "}, "grades.score": {"$gt": 70}, "address.coord.0": {"$lt": -65.754168}}):
+# for doc in db.restaurantData.find({
+#     "cuisine": {"$ne": "American "}, 
+#     "grades.score": {"$gt": 70}, 
+#     "address.coord.0": {"$lt": -65.754168}}):
 #     print(doc)
 
 # 14.Find the restaurants which do not prepare any cuisine of 'American ' and achieved a grade point 'A' and not in the borough of Brooklyn, sorted by cuisine in descending order.
-# for doc in db.restaurantData.find({"cuisine": {"$ne": "American "}, "grades.grade": {"$eq": 'A'}, "borough": {"$ne": "Brooklyn"}}).sort("cuisine", -1):
+# for doc in db.restaurantData.find({
+#     "cuisine": {"$ne": "American "}, 
+#     "grades.grade": {"$eq": 'A'}, 
+#     "borough": {"$ne": "Brooklyn"}}).sort("cuisine", -1):
 #     print(doc)
 
 # 15.Find the restaurant Id, name, borough and cuisine for those restaurants which contain 'Wil' as first three letters for its name.
@@ -121,17 +133,45 @@ db = client["bigdata"]
 # for doc in db.restaurantData.find({"borough": {"$nin": ["Staten Island", "Queens", "Bronx", "Brooklyn"]}}, {"restaurant_id": 1, "name": 1, "borough": 1, "cuisine": 1}):
 #     print(doc)
 
-
 # 21.Find the restaurant Id, name, borough and cuisine for those restaurants which achieved a score below 10.
 # for doc in db.restaurantData.find({"grades.score": {"$lt": 10}}, {"restaurant_id": 1, "name": 1, "borough": 1, "cuisine": 1}):
 #     print(doc)
 
 # 22.Find the restaurant Id, name, borough and cuisine for those restaurants which prepared dish except 'American' and 'Chinese' or restaurant's name begins with letter 'Wil'.
+# for doc in db.restaurantData.find({"$or": 
+#     [
+#         {"cuisine": {"$nin": ["American ", "Chinese"]}}, 
+#         {"name": {"$regex": "^Wil"}}
+#     ]}, {"restaurant_id": 1, "name": 1, "borough": 1, "cuisine": 1}):
+#     print(doc)
 
 # 23.Find the restaurant Id, name, and grades for those restaurants which achieved a grade of "A" and scored 11 on an ISODate "2014-08-11T00:00:00Z" among many of survey dates.
+# time = "2014-08-11T00:00:00Z"
+# dt = dateutil.parser.isoparse(time)
+# milliseconds = int(dt.timestamp() * 1000)
+# for doc in db.restaurantData.find({"grades": {
+#         "$elemMatch": {
+#             "grade": "A", 
+#             "score": 11, 
+#             "date.$date": milliseconds
+#         }
+#     }}, {"restaurant_id": 1, "name": 1, "grades": 1}):
+#     print(doc)
 
 # 24.Find the restaurant Id, name and grades for those restaurants where the 2nd element of grades array contains a grade of "A" and score 9 on an ISODate "2014-08-11T00:00:00Z".
+# for doc in db.restaurantData.find({"$and": [
+#     {"grades.1.grade": "A"},
+#     {"grades.1.score": 9},
+#     {"grades.1.date.$date": milliseconds}
+# ]}, {"restaurant_id": 1, "name": 1, "grades": 1}):
+#     print(doc)
 
 # 25.Find the restaurant Id, name, address and geographical location for those restaurants where 2nd element of coordinates contains a value which is more than 42 and up to 52.
+# for doc in db.restaurantData.find({"address.coord.1": {"$gt": 42, "$lte": 52}}, {"restaurant_id": 1, "name": 1, "address": 1}):
+#     print(doc)
+
+
+
+
 
 client.close()
