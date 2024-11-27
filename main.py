@@ -31,14 +31,34 @@ db = client["bigdata"]
 #     durhamCountyData = json.load(f)
 # db.durhamCountyData.insert_many(durhamCountyData)
 
-# worldCitiesData = pd.read_csv('worldcities.csv', delimiter=';')   # loading csv file
-# worldCitiesData.to_json('worldcities.json')
-# requesting = []
+# with open('worldcities.csv', mode='r') as f:
+#     reader = csv.reader(f)
+#     cleaned_data = []
+#     for row in reader:
+#         cleaned_data.append([0 if len(data) == 0 else data.strip('"') for data in row])
+
+# with open('cleaned_worldcities.csv', mode='w') as f:
+#     writer = csv.writer(f)
+#     writer.writerows(cleaned_data)
+# worldCitiesData = pd.read_csv('cleaned_worldcities.csv', delimiter=',')
+# worldCitiesData.to_json('worldcities.json', orient='records')
+
 # with open("worldcities.json", "r") as f:
-#     for jsonObj in f:
-#         myDict = json.loads(jsonObj)
-#         requesting.append(myDict)
-# db.worldCitiesData.insert_many(requesting)
+#     worldCitiesData = json.load(f)
+# db.worldCitiesData.insert_many(worldCitiesData)
+
+# for city in db.worldCitiesData.find():
+#     db.worldCitiesData.update_one(
+#         {"_id": city["_id"]},
+#         {
+#             "$set": {
+#                 "geolocation": {
+#                     "type": "Point",
+#                     "coordinates": [city["lng"], city["lat"]]
+#                 }
+#             }
+#         }
+#     )
 
 
 # ------------------------- Q1: Write MongoDB queries for restaurants.json ------------------------- #
@@ -200,7 +220,24 @@ db = client["bigdata"]
 
 
 # ------------------------- Q3: Extra Credit ------------------------- #
-
+# db.meteoritesData.create_index([("geolocation", "2dsphere")])
+# db.worldCitiesData.create_index([("geolocation", "2dsphere")])
+# for meteorite in db.meteoritesData.find({"year": {"$gte": "1950-01-01T00:00:00.000"}, "fall": "Fell"}):
+#     geolocation = meteorite.get('geolocation')
+#     if geolocation:
+#         coords = geolocation.get('coordinates')
+#         closest_city = db.worldCitiesData.find_one({
+#             "geolocation": {
+#                 "$near": {
+#                     "$geometry": {
+#                         "type": "Point",
+#                         "coordinates": coords
+#                     }
+#                 }
+#             }
+#         })
+#         if closest_city:
+#             print(f"Closest city to meteorite {meteorite['name']} is {closest_city['city']}")
 
 
 
